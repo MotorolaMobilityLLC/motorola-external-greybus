@@ -11,6 +11,18 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include "greybus.h"
+#include "muc_svc.h"
+
+static int (*g_get_manifest_size)(u8 intf_id);
+static int (*g_get_manifest)(u8 intf_id, void *manifest, size_t size);
+
+void gb_control_set_manifest_funcs(int (*get_manifest_size)(u8 intf_id),
+		int (*get_manifest)(u8 intf_id, void *manifest, size_t size))
+{
+	g_get_manifest_size = get_manifest_size;
+	g_get_manifest = get_manifest;
+}
+EXPORT_SYMBOL_GPL(gb_control_set_manifest_funcs);
 
 /* Get Manifest's size from the interface */
 int gb_control_get_manifest_size_operation(struct gb_interface *intf)
@@ -18,6 +30,12 @@ int gb_control_get_manifest_size_operation(struct gb_interface *intf)
 	struct gb_control_get_manifest_size_response response;
 	struct gb_connection *connection = intf->control->connection;
 	int ret;
+
+	if (g_get_manifest_size) {
+		ret = g_get_manifest_size(intf->interface_id);
+		if (ret > 0)
+			return ret;
+	}
 
 	ret = gb_operation_sync(connection, GB_CONTROL_TYPE_GET_MANIFEST_SIZE,
 				NULL, 0, &response, sizeof(response));
@@ -35,6 +53,10 @@ int gb_control_get_manifest_operation(struct gb_interface *intf, void *manifest,
 				      size_t size)
 {
 	struct gb_connection *connection = intf->control->connection;
+
+	if (g_get_manifest &&
+			!g_get_manifest(intf->interface_id, manifest, size))
+		return 0;
 
 	return gb_operation_sync(connection, GB_CONTROL_TYPE_GET_MANIFEST,
 				NULL, 0, manifest, size);

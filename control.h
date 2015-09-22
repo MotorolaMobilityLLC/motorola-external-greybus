@@ -27,4 +27,6 @@ int gb_control_get_manifest_operation(struct gb_interface *intf, void *manifest,
 
 int gb_control_protocol_init(void);
 void gb_control_protocol_exit(void);
+void gb_control_set_manifest_funcs(int (*get_manifest_size)(u8 intf_id),
+		int (*get_manifest)(u8 intf_id, void *manifest, size_t size));
 #endif /* __CONTROL_H */

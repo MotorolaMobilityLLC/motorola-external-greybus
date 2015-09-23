@@ -24,8 +24,6 @@
 
 #include "muc_svc.h"
 #include "mods_nw.h"
-#include "greybus_manifest.h"
-#include "control.h"
 
 struct muc_svc_data {
 	struct mods_dl_device *dld;
@@ -895,42 +893,6 @@ clear_size:
 	return err;
 }
 
-/*
- * Return the size of manifest from the data got during manifest verification.
- */
-static int mods_dl_get_manifest_size(u8 intf_id)
-{
-	struct mods_dl_device *mods_dev;
-
-	if (!svc_dd->authenticate)
-		return 0;
-
-	mods_dev = mods_nw_get_dl_device(intf_id);
-	if (!mods_dev || !mods_dev->manifest || !mods_dev->manifest_size)
-		return -EINVAL;
-
-	return ((struct greybus_manifest_header *)mods_dev->manifest)->size;
-}
-
-/*
- * Return the manifest got during manifest verification.
- */
-static int mods_dl_get_manifest(u8 intf_id, void *manifest, size_t size)
-{
-	struct mods_dl_device *mods_dev;
-
-	if (!svc_dd->authenticate)
-		return -EINVAL;
-
-	mods_dev = mods_nw_get_dl_device(intf_id);
-	if (!mods_dev || !mods_dev->manifest || !mods_dev->manifest_size)
-		return -EINVAL;
-
-	memcpy(manifest, mods_dev->manifest, size);
-
-	return 0;
-}
-
 static struct muc_svc_hotplug_work *
 muc_svc_create_hotplug_work(struct mods_dl_device *mods_dev)
 {
@@ -962,9 +924,6 @@ muc_svc_create_hotplug_work(struct mods_dl_device *mods_dev)
 		goto free_route;
 
 	muc_svc_destroy_control_route(mods_dev->intf_id);
-
-	gb_control_set_manifest_funcs(mods_dl_get_manifest_size,
-			mods_dl_get_manifest);
 
 	return hpw;
 

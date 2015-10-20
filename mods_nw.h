@@ -37,11 +37,8 @@ struct muc_msg {
 #define CONFIG_CPORT_ID_MAX 128
 
 struct mods_dl_driver {
-	size_t dl_priv_size;
-
 	int (*message_send)(struct mods_dl_device *nd, uint8_t *payload,
 			size_t size);
-	void (*message_cancel)(void *cookie);
 	int (*get_protocol)(uint16_t cport_id, uint8_t *protocol);
 };
 

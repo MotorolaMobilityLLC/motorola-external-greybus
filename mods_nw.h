@@ -29,12 +29,6 @@ struct muc_msg {
 
 #define MUC_MSG_SIZE_MAX        (1024)
 #define PAYLOAD_MAX_SIZE        (MUC_MSG_SIZE_MAX - sizeof(struct muc_msg))
-/*
- * FIXME:  Commit 7ff9dd82 increased the size to 4095 as the
- * max cport id, need to redesign this for dynamic allocation
- * or just less wasted space.
- */
-#define CONFIG_CPORT_ID_MAX 128
 
 struct mods_dl_driver {
 	int (*message_send)(struct mods_dl_device *nd, uint8_t *payload,

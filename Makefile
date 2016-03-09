@@ -50,6 +50,7 @@ gb-ptp-y := ptp.o
 gb-camera_ext-y := camera_ext_gb.o camera_ext_mod_v4l2.o camera_ext_ctrls.o
 gb-usb_ext-y := usb-ext.o
 gb-display-y := display.o
+gb-backlight_ext-y := backlight-ext.o
 
 obj-m += greybus.o
 obj-m += gb-phy.o
@@ -68,6 +69,7 @@ obj-m += gb-vendor-moto.o
 obj-m += gb-ptp.o
 obj-m += gb-camera_ext.o
 obj-m += gb-display.o
+obj-m += gb-backlight_ext.o
 obj-m += gb-usb_ext.o
 
 KERNELVER		?= $(shell uname -r)

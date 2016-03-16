@@ -1777,7 +1777,6 @@ static void mods_dl_device_free(struct kref *kref)
 	struct mods_dl_device *mods_dev;
 
 	mods_dev = container_of(kref, struct mods_dl_device, kref);
-	pr_info("muc: Free: %p\n", mods_dev);
 	kfree(mods_dev->hpw);
 	kfree(mods_dev);
 }
@@ -1787,7 +1786,6 @@ void mods_dl_device_put(struct mods_dl_device *mods_dev)
 	unsigned long flags;
 
 	spin_lock_irqsave(&svc_ops_lock, flags);
-	pr_info("muc: put: %p\n", mods_dev);
 	kref_put(&mods_dev->kref, mods_dl_device_free);
 	spin_unlock_irqrestore(&svc_ops_lock, flags);
 }

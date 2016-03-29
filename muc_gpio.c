@@ -624,7 +624,7 @@ int muc_gpio_init(struct device *dev, struct muc_data *cdata)
 	cdata->det_hysteresis = MSEC_TO_JIFFIES(cdata->det_hysteresis);
 
 	ret = of_property_read_u32(dev->of_node,
-		"mmi,muc-ctrl-removal-hysteresis", &cdata->rm_hysteresis);
+		"mmi,muc-ctrl-rm-hysteresis", &cdata->rm_hysteresis);
 	if (ret)
 		dev_warn(dev, "%s:%d failed to read rm hysteresis.\n",
 			__func__, __LINE__);

@@ -375,7 +375,7 @@ retry:
 
 	if (ack_req == ACK_NEEDED)
 		muc_gpio_set_ack(1);
-	else
+	else if (ack_req == ACK_ERROR)
 		dd->no_ack_sent++;
 
 	if (tx_buf) {

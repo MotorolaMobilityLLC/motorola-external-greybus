@@ -203,6 +203,6 @@ struct mb_control_capability_changed_request {
 /* Control protocol get powerup reason request */
 struct mb_control_get_pwrup_reason_response {
 	__le32  reason;
-} __attribute__ ((packed));
+} __packed;
 
 #endif /* __MODS_PROTOCOLS_H */

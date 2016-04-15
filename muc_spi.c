@@ -15,8 +15,6 @@
 
 #include <linux/debugfs.h>
 #include <linux/delay.h>
-#include <linux/dma-buf.h>
-#include <linux/dma-mapping.h>
 #include <linux/err.h>
 #include <linux/interrupt.h>
 #include <linux/log2.h>
@@ -155,16 +153,12 @@ struct muc_spi_data {
 	uint32_t rx_datagram_ndx;          /* Index into datagram buffer for new data */
 	uint8_t pkts_remaining;            /* Packets needed to complete msg */
 
-	/* Physical addresses of DMA buffers */
-	phys_addr_t tx_phys;
-	phys_addr_t rx_phys;
-	phys_addr_t rx_dg_phys;
-
 	/* Statistics below */
 	struct dentry *stats_dentry;       /* Debugfs entry */
 	uint32_t no_ack_sent;              /* Number of times no ACK was sent */
 	uint32_t no_ack_rcvd;              /* Number of times no ACK was received */
 	uint32_t no_ack_abort;             /* Number of times transfer was aborted */
+
 	/* Quirks below */
 	bool wake_delay;                   /* Delay after wake assert is req'd */
 };
@@ -797,57 +791,21 @@ static const struct file_operations muc_spi_stats_fops = {
 
 static int allocate_buffers(struct muc_spi_data *dd)
 {
-	DEFINE_DMA_ATTRS(attrs);
 	struct device *dev = &dd->spi->dev;
 
-	dma_set_attr(DMA_ATTR_FORCE_CONTIGUOUS, &attrs);
-
-	dd->tx_pkt = dma_alloc_attrs(dev, PKT_SIZE(MAX_DATAGRAM_SZ),
-				&dd->tx_phys, GFP_KERNEL, &attrs);
-	if (!dd->tx_pkt) {
-		dev_err(dev, "Failed to allocate tx_buf\n");
+	dd->tx_pkt = devm_kzalloc(dev, PKT_SIZE(MAX_DATAGRAM_SZ), GFP_KERNEL);
+	if (!dd->tx_pkt)
 		return -ENOMEM;
-	}
 
-	dd->rx_pkt = dma_alloc_attrs(dev, PKT_SIZE(MAX_DATAGRAM_SZ),
-				&dd->rx_phys, GFP_KERNEL, &attrs);
-	if (!dd->rx_pkt) {
-		dev_err(dev, "Failed to allocate rx_buf\n");
-		goto free_tx;
-	}
+	dd->rx_pkt = devm_kzalloc(dev, PKT_SIZE(MAX_DATAGRAM_SZ), GFP_KERNEL);
+	if (!dd->rx_pkt)
+		return -ENOMEM;
 
-	dd->rx_datagram = dma_alloc_attrs(dev, MAX_DATAGRAM_SZ,
-				&dd->rx_dg_phys, GFP_KERNEL, &attrs);
-	if (!dd->rx_datagram) {
-		dev_err(dev, "Failed to allocate rx_datagram\n");
-		goto free_rx;
-	}
+	dd->rx_datagram = devm_kzalloc(dev, MAX_DATAGRAM_SZ, GFP_KERNEL);
+	if (!dd->rx_datagram)
+		return -ENOMEM;
 
 	return 0;
-
-free_rx:
-	dma_free_attrs(dev, PKT_SIZE(MAX_DATAGRAM_SZ), dd->rx_pkt,
-			dd->rx_phys, &attrs);
-free_tx:
-	dma_free_attrs(dev, PKT_SIZE(MAX_DATAGRAM_SZ), dd->tx_pkt,
-			dd->tx_phys, &attrs);
-
-	return -ENOMEM;
-}
-
-static void free_buffers(struct muc_spi_data *dd)
-{
-	DEFINE_DMA_ATTRS(attrs);
-	struct device *dev = &dd->spi->dev;
-
-	dma_set_attr(DMA_ATTR_FORCE_CONTIGUOUS, &attrs);
-
-	dma_free_attrs(dev, MAX_DATAGRAM_SZ, dd->rx_datagram,
-			dd->rx_dg_phys, &attrs);
-	dma_free_attrs(dev, PKT_SIZE(MAX_DATAGRAM_SZ), dd->tx_pkt,
-			dd->tx_phys, &attrs);
-	dma_free_attrs(dev, PKT_SIZE(MAX_DATAGRAM_SZ), dd->rx_pkt,
-			dd->rx_phys, &attrs);
 }
 
 static void muc_spi_quirks_init(struct muc_spi_data *dd)
@@ -901,7 +859,7 @@ static int muc_spi_probe(struct spi_device *spi)
 
 	ret = set_packet_size(dd, DEFAULT_PKT_SZ);
 	if (ret)
-		goto free_buffers;
+		goto remove_dl_device;
 
 	muc_spi_quirks_init(dd);
 	mutex_init(&dd->mutex);
@@ -920,8 +878,6 @@ static int muc_spi_probe(struct spi_device *spi)
 
 	return 0;
 
-free_buffers:
-	free_buffers(dd);
 remove_dl_device:
 	mods_remove_dl_device(dd->dld);
 
@@ -957,8 +913,6 @@ static int muc_spi_remove(struct spi_device *spi)
 	mods_remove_dl_device(dd->dld);
 	debugfs_remove(dd->stats_dentry);
 	spi_set_drvdata(spi, NULL);
-
-	free_buffers(dd);
 
 	return 0;
 }

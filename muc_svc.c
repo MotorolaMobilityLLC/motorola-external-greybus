@@ -2608,7 +2608,7 @@ static int muc_svc_probe(struct platform_device *pdev)
 		return ret;
 
 	/* initialize recovery to enabled */
-	dd->recovery_level = MUC_SVC_RECOVERY_SOFT; /* MMI_STOPSHIP IF _SOFT */
+	dd->recovery_level = MUC_SVC_RECOVERY_FULL;
 
 	dd->dld = _mods_create_dl_device(&muc_svc_dl_driver, &pdev->dev,
 			MODS_INTF_SVC);

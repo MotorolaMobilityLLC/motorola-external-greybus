@@ -208,11 +208,11 @@ static void muc_svc_clear_wdog(struct mods_dl_device *mods_dev)
 	add_uevent_var(env, "MOD_EVENT=RECOVERY_SUCCESS");
 	add_uevent_var(env, "RECOVERY_RETRIES=%d", count);
 	add_uevent_var(env, "RECOVERY_VID=%d",
-    		mods_dev->hpw->hotplug.data.ara_vend_id);
+		mods_dev->hpw->hotplug.data.ara_vend_id);
 	add_uevent_var(env, "RECOVERY_PID=%d",
-    		mods_dev->hpw->hotplug.data.ara_prod_id);
+		mods_dev->hpw->hotplug.data.ara_prod_id);
 	add_uevent_var(env, "RECOVERY_UID=0x%016llX%016llX",
-    		mods_dev->uid_high, mods_dev->uid_low);
+		mods_dev->uid_high, mods_dev->uid_low);
 	add_uevent_var(env, "RECOVERY_FW_VERSION=0x%08X", mods_dev->fw_version);
 	kobject_uevent_env(&svc_dd->pdev->dev.kobj, KOBJ_CHANGE, env->envp);
 
